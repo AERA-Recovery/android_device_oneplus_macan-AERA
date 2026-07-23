@@ -5,17 +5,17 @@
 - [X] Display
 - [X] Touch 
 - [X] Decryption
-- [?] Flashing
-- [?] Backup & Restore
-- [?] KernelSU, KernelSU Next & SukiSU Ultra Installer
-- [?] MTP/OTG Storage
+- [X] Flashing
+- [X] Backup & Restore
+- [X] KernelSU, KernelSU Next & SukiSU Ultra Installer
+- [X] MTP/OTG Storage
 - [X] ADB/FastbootD
-- [?] Factory Reset
+- [X] Factory Reset
+- [X] Flashlight
 
 ## Not working
 
 - [ ] Vibration
-- [ ] Flashlight
 
 # How To Build
 
