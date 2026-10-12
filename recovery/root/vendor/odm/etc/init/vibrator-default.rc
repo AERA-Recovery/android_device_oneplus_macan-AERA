@@ -3,7 +3,7 @@ on boot
     #ifeq ($(OPLUS_FEATURE_HAPTIC_VIBRATE),yes)
     chown audioserver audioserver /dev/awinic_haptic
     chown audioserver audioserver /sys/class/leds/vibrator/haptic_audio
-    chown audioserver audioserver /sys/calss/leds/vibrator/gun_type
+    chown audioserver audioserver /sys/class/leds/vibrator/gun_type
     chown audioserver audioserver /sys/class/leds/vibrator/bullet_nr
     chown audioserver audioserver /sys/class/leds/vibrator/register
     chown audioserver audioserver /sys/class/leds/vibrator/gun_mode

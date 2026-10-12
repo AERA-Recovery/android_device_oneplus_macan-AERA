@@ -19,9 +19,15 @@ PRODUCT_TARGET_VNDK_VERSION := 34
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
 
 PRODUCT_PACKAGES += \
+    aera-audio-bridge \
+    aera-audio-service \
+    aera-gpu-probe \
+    aera-browser-jail \
     lpflash \
     lpmake \
     lpunpack
+
+PRODUCT_VENDOR_PROPERTIES += ro.hardware.egl=adreno
 
 # OTA certs
 PRODUCT_EXTRA_RECOVERY_KEYS += \
@@ -31,6 +37,6 @@ PRODUCT_EXTRA_RECOVERY_KEYS += \
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += $(LOCAL_PATH)
 
-# some OrangeFox-specific settings
-$(call inherit-product, $(LOCAL_PATH)/fox_macan.mk)
+# AERA-specific settings
+$(call inherit-product, $(LOCAL_PATH)/aera_macan.mk)
 #

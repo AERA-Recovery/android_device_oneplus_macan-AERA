@@ -27,7 +27,7 @@ $(call inherit-product, vendor/twrp/config/common.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 
 
-# Inherit from dodge device
+# Inherit from macan device
 $(call inherit-product, device/oneplus/macan/device.mk)
 
 PRODUCT_DEVICE := macan
@@ -44,4 +44,4 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
 BUILD_FINGERPRINT := oplus/ossi/ossi:16/BP2A.250605.015/1767113132716:user/release-keys
 
 # Theme
-TW_STATUS_ICONS_ALIGN := center
+AERA_STATUS_ICONS_ALIGN := center

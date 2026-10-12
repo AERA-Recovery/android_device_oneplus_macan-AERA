@@ -1,43 +1,48 @@
-# OnePlus 15R/ACE6T macan OrangeFox device tree
+# AERA device tree — OnePlus 15R / Ace 6T (macan)
 
-## Working
+Based on the working OrangeFox tree by Jonas Salo and Daniel Springer.
+Original commit history and licensing are retained.
 
-- [X] Display
-- [X] Touch 
-- [X] Decryption
-- [X] Flashing
-- [X] Backup & Restore
-- [X] KernelSU, KernelSU Next & SukiSU Ultra Installer
-- [X] MTP/OTG Storage
-- [X] ADB/FastbootD
-- [X] Factory Reset
-- [X] Flashlight
+## Bring-up status
 
-## Not working
+The first AERA test build compiles successfully, but has not been tested on macan.
+Display, touch, decryption, flashing and storage worked with the original
+OrangeFox build; that is not yet confirmation for AERA.
 
-- [ ] Vibration
+- AERA adaptive UI, English default, native Root Manager, FRP wipe and the
+  optional Keep current ABL setting configured.
+- Partition geometry and model aliases retained; obsolete system_dlkm_oki build
+  entries removed for the Android 16 build system.
+- Vibration was broken upstream. The AIDL backend remains selected; runtime
+  diagnosis and firmware dependency checks are still required.
+- Device-specific ELF blobs replaced from the macan Android 16 dump, including
+  Rust Gatekeeper and `hlosminkdaemon`. Legacy
+  versioned libc++ and keystore overrides removed.
+- Adreno graphics and the post-decryption AGM/PAL audio integration added.
+- WCN7750 Wi-Fi uses ICNSS/WPSS with post-decryption module loading. AERA supplies
+  the supplicant and DHCP tools; no duplicate executables are bundled.
+- Kernel modules load from installed firmware rather than the recovery ramdisk.
+  Audio calibration and runtime libraries use read-only installed partitions.
 
-# How To Build
+Test boot, decryption, touch, vibration, Wi-Fi, audio, GPU rendering and fastbootd
+transitions before relying on this build. Build success is not hardware validation.
 
-### Clone & Sync Source
-```
-mkdir -p ~/android/OrangeFox_14
-cd ~/android/OrangeFox_14
-git clone https://gitlab.com/OrangeFox/sync.git
-cd sync
-./orangefox_sync.sh --branch 14.1 --path ~/android/fox_14.1
-```
-### Clone Device-tree
-```
-cd ~/android/fox_14.1/device
-mkdir -p oneplus
-cd oneplus
-git clone https://github.com/koaaN/android_device_oneplus_macan-orangefox macan
-```
-### BUILD!
-```
-cd ~/android/fox_14.1
+## Build
+
+With the AERA aera-16.0 source synced and this tree at
+device/oneplus/macan, use a fresh shell:
+
+```sh
 source build/envsetup.sh
-lunch twrp_macan-ap2a-eng
-mka adbd recoveryimage
+source device/oneplus/macan/vendorsetup.sh macan
+lunch twrp_macan-bp2a-eng
+mka recoveryimage
 ```
+
+When switching devices, clean/clobber the previous output before building.
+The explicit vendorsetup selection prevents this tree from overriding another
+device merely because envsetup discovers it. Other trees may still have their
+own unguarded setup scripts.
+
+Build labels follow the project's Official/Beta configuration; this does not
+imply that this untested port has been released.
