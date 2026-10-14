@@ -23,7 +23,7 @@ service wpa_supplicant /system/bin/wpa_supplicant -Dnl80211 -iwlan0 -dd -O/tmp/r
     disabled
     seclabel u:r:recovery:s0
 
-service aera-wlan-ready /system/bin/sh -c "attempt=0; while [ $$attempt -lt 60 ]; do if test -e /sys/class/net/wlan0; then setprop wifi.driver.ready true; exit 0; fi; attempt=$$((attempt + 1)); sleep 1; done; echo 'AERA Wi-Fi: wlan0 did not appear' > /dev/kmsg; exit 1"
+service aera-wlan-ready /system/bin/sh /system/bin/aera-wlan-ready.sh
     user root
     group root
     disabled
