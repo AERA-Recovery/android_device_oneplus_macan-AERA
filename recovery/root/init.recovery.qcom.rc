@@ -46,6 +46,23 @@ service post-boot-script /system/bin/sh -c /vendor/bin/init.kernel.post_boot-can
     oneshot
     seclabel u:r:recovery:s0
 
+# Do not start eSE clients while module loading temporarily overlays /vendor
+# and /odm: that hides the recovery TA firmware and can leave Weaver unusable.
+# Use the same readiness contract as the cold fastbootd -> recovery path.
+service vendor.crypto-hal-delay /system/bin/sh -c "sleep 1; if grep -q '^/dev/block/.* /odm ' /proc/mounts; then umount -l /odm || exit 1; fi; if grep -q '^/dev/block/.* /vendor ' /proc/mounts; then umount -l /vendor || exit 1; fi; setprop vendor.crypto_hal.start_se 1; sleep 1; setprop vendor.crypto_hal.start_clients 1; sleep 1; setprop vendor.crypto_hal.ready 1"
+    user root
+    group root
+    disabled
+    oneshot
+    seclabel u:r:recovery:s0
+
+on property:vendor.crypto_hal.start_se=1
+    start vendor.secure_element
+
+on property:vendor.crypto_hal.start_clients=1
+    start vendor.weaver_nxp
+    start vendor.keymint-strongbox
+
 on early-fs
     write /proc/sys/walt/sched_lib_name "recovery,Updater,updater,update_engine_sideload"
     write /proc/sys/walt/sched_lib_mask_force 255
@@ -68,6 +85,7 @@ on fs
     write /proc/sys/kernel/firmware_config/force_sysfs_fallback 1
 
 on property:twrp.modules.loaded=true
+    start vendor.crypto-hal-delay
     start vendor.oplus.vibrator
     # Mount firmware
     mkdir /firmware
@@ -87,5 +105,4 @@ on property:hwservicemanager.ready=true
 
 on property:vendor.sys.listeners.registered=true
     start vendor.minkdaemon
-    start vendor.keymint-strongbox
     start vendor.oplus.vibrator
