@@ -15,10 +15,17 @@ audio_abi=/vendor/aera-audio-abi
 lock=${stock_root}/.audio-lock
 slot_suffix="$(getprop ro.boot.slot_suffix)"
 
+report() {
+    echo "AERA audio: $*" > /dev/kmsg
+}
+
 fail() {
+    report "FAILED: $*"
     echo "AERA audio: $*" >&2
     exit 1
 }
+
+report "bootstrap starting after decryption"
 
 case "$(getprop ro.product.device)" in
     macan|PLR110|CPH2767|CPH2769|CPH2771|OP6117L1|OP612DL1) ;;
@@ -77,6 +84,7 @@ mount_read_only() {
 mount_read_only vendor "${vendor_root}" || fail "could not mount stock vendor"
 mount_read_only system "${system_root}" || fail "could not mount stock system"
 mount_read_only odm "${odm_root}" || fail "could not mount stock odm"
+report "slot-matched stock audio partitions mounted read-only"
 
 # The dedicated slot-matched DSP partition carries AudioPD modules. Android
 # mounts it before audioadsprpcd starts and exposes the legacy /dsp alias.
@@ -123,9 +131,10 @@ if [ -d "${odm_root}/firmware/fastchg" ] && \
         fail "could not expose the stock charger configuration"
     mount -o remount,bind,ro /odm/firmware/fastchg 2>/dev/null
 fi
-bind_file_read_only \
-    "${vendor_root}/etc/seccomp_policy/vendor.qti.hardware.dsp.policy" \
-    "/vendor/etc/seccomp_policy/vendor.qti.hardware.dsp.policy"
+# The policy shipped alongside aera-dspservice must remain visible to init's
+# service namespace, without depending on the stock mounts created here.
+[ -r /vendor/etc/seccomp_policy/vendor.qti.hardware.dsp.policy ] || \
+    fail "missing ramdisk DSP seccomp policy"
 
 # Keep AERA's vendor tree and GPU userspace visible. Qualcomm's matching
 # library directory is exposed under /vendor so the vendor linker namespace
@@ -206,6 +215,7 @@ start_init_service() {
     service="$1"
     required="$2"
     state="$(getprop "init.svc.${service}")"
+    report "starting ${service}; previous state=${state}"
     [ "${state}" = running ] && return 0
     setprop ctl.start "${service}"
     attempt=0
@@ -255,6 +265,7 @@ start_init_service aera-pd-mapper required
 start_init_service aera-dspservice required
 start_init_service aera-audioadsprpcd required
 start_adsp
+report "DSP services started; waiting up to 20s for /dev/snd/controlC0"
 
 attempt=0
 # card 100 is tinyalsa's virtual AGM plugin id; the kernel machine card itself
@@ -264,9 +275,10 @@ while [ ! -e /dev/snd/controlC0 ] && [ "${attempt}" -lt 200 ]; do
     sleep 0.1
 done
 [ -e /dev/snd/controlC0 ] || fail "the Qualcomm machine sound card did not register"
+report "sound card registered after ${attempt} polling intervals"
 
 # The init service owns the stock-library environment. Do not export it here:
 # recovery's toolbox/getprop/setprop require AERA's matching system libraries.
 start_init_service aera-agm-service required
 
-echo "AERA audio: Macan AGM backend is ready"
+report "Macan AGM backend is ready (playback not yet tested)"
