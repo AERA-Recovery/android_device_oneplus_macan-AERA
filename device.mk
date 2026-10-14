@@ -29,6 +29,13 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_VENDOR_PROPERTIES += ro.hardware.egl=adreno
 
+# EGL is initialized while recovery may temporarily mount Android's /vendor.
+# Keep the bundled graphics framework pair reachable in that window, without
+# changing vendor mounts or the secure-element/decryption startup ordering.
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/recovery/root/vendor/lib64/libnativewindow.so:recovery/root/system/lib64/libnativewindow.so \
+    $(LOCAL_PATH)/recovery/root/vendor/lib64/libui.so:recovery/root/system/lib64/libui.so
+
 # OTA certs
 PRODUCT_EXTRA_RECOVERY_KEYS += \
 	$(LOCAL_PATH)/security/local_OTA \
