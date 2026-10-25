@@ -11,21 +11,25 @@ report() {
 
 report "waiting for wlan0 after WPSS boot request"
 attempt=0
-while [ "$attempt" -lt 60 ]; do
+while [ "$attempt" -lt 3000 ]; do
     if [ -e /sys/class/net/wlan0 ]; then
-        report "wlan0 appeared after ${attempt}s; requesting supplicant"
+        # Macan's WLAN driver enters its idle shutdown roughly 250 ms after
+        # publishing wlan0 when no client has claimed the interface.  Polling
+        # once per second therefore starts supplicant after the radio has
+        # already begun shutting down.  Claim it within the idle window.
+        report "wlan0 appeared after ${attempt} fast polls; requesting supplicant"
         setprop wifi.driver.ready true
-        sleep 1
+        sleep 0.1
         report "supplicant=$(getprop init.svc.wpa_supplicant), operstate=$(cat /sys/class/net/wlan0/operstate 2>/dev/null)"
         exit 0
     fi
     case "$attempt" in
-        5|15|30)
-            report "still waiting after ${attempt}s; interfaces: $(ls /sys/class/net)"
+        250|750|1500)
+            report "still waiting after ${attempt} fast polls; interfaces: $(ls /sys/class/net)"
             ;;
     esac
     attempt=$((attempt + 1))
-    sleep 1
+    sleep 0.02
 done
 report "timeout: wlan0 did not appear; interfaces: $(ls /sys/class/net)"
 for node in /sys/class/remoteproc/remoteproc*; do

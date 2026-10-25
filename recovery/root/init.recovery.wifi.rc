@@ -2,10 +2,8 @@
 # Modules are loaded from installed firmware by AERA, not shipped in ramdisk.
 on property:post.decrypt.modules=true
     setprop sys.aera.wlan.up 0
-    # The early PMIC bootstrap unmounts /firmware. Restore the active-slot
-    # modem firmware before requesting WPSS; audio can reuse this mount.
-    mkdir /firmware 0755 root root
-    mount vfat /dev/block/bootdevice/by-name/modem${ro.boot.slot_suffix} /firmware ro
+    # AERA's post-decrypt module loader already exposes active-slot firmware.
+    # Boot WCN7750 only after its installed modules have been loaded.
     write /sys/kernel/icnss/wlan_en_delay 1000
     write /sys/kernel/icnss/wpss_boot 1
     start aera-wlan-ready
