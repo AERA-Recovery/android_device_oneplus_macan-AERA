@@ -61,7 +61,9 @@ on property:vendor.crypto_hal.start_se=1
 
 on property:vendor.crypto_hal.start_clients=1
     start vendor.weaver_nxp
-    start vendor.keymint-strongbox
+    # The default QTI KeyMint plus NXP Weaver handle FBE.  Starting the
+    # optional StrongBox applet in recovery makes it abort and restart forever
+    # when the eSE refuses its logical channel, without helping decryption.
 
 on early-fs
     write /proc/sys/walt/sched_lib_name "recovery,Updater,updater,update_engine_sideload"
