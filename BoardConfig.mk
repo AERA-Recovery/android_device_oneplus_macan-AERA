@@ -189,4 +189,6 @@ AERA_INCLUDE_OMAPI := true
 # Use AERA's Android 16 keystore2 and standard libc++; no 14.1 ABI overrides.
 # Load Wi-Fi's GKI rfkill and IPA dependencies before cfg80211/the WLAN driver.
 # Modules remain sourced from the installed system_dlkm/vendor_dlkm partitions.
-AERA_POST_DECRYPT_MODULES := "smem-mailbox.ko cnss_prealloc.ko cnss_utils.ko cnss_nl.ko wlan_firmware_service.ko icnss2.ko qcom_va_minidump.ko qcom_ramdump.ko rmnet_mem.ko gsim.ko ipam.ko rfkill.ko cfg80211.ko qca_cld3_wcn7750.ko"
+# Stock sound-card BT links require the SoundWire endpoint, not just btfmcodec.
+# Load it after rfkill/CNSS dependencies and before the audio bootstrap starts.
+AERA_POST_DECRYPT_MODULES := "smem-mailbox.ko cnss_prealloc.ko cnss_utils.ko cnss_nl.ko wlan_firmware_service.ko icnss2.ko qcom_va_minidump.ko qcom_ramdump.ko rmnet_mem.ko gsim.ko ipam.ko rfkill.ko btpower.ko btfmcodec.ko bt_fm_swr.ko cfg80211.ko qca_cld3_wcn7750.ko"
