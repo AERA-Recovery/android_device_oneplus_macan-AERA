@@ -234,17 +234,21 @@ if [ -d "${vendor_root}/etc/audio" ] && \
         fail "could not expose the stock audio service configuration"
 fi
 
-# Macan's ODM files add the TFA route and Oplus speaker protection to the
-# generic Canoe PAL configuration. Recovery does not publish the vendor SKU,
-# so PAL selects the files exposed directly under /vendor/etc.
+# PAL derives these names from the actual alor-mtp-wcd9378 sound card.
+# Expose the installed ODM tuning under both the codec-specific name and
+# PAL's variant-less fallback. Canoe aliases alone leave the ramdisk runtime
+# without speaker routes once the temporary stock /vendor overlay is gone.
 for config in mixer_paths resourcemanager; do
-    bind_file_read_only "${odm_root}/etc/${config}.xml" \
-        "/vendor/etc/${config}_canoe_mtp.xml"
+    for card_variant in alor_mtp_wcd9378 alor_mtp; do
+        bind_file_read_only "${odm_root}/etc/${config}.xml" \
+            "/vendor/etc/${config}_${card_variant}.xml"
+    done
 done
 bind_file_read_only "${odm_root}/etc/usecaseKvManager.xml" \
     "/vendor/etc/usecaseKvManager.xml"
-bind_file_read_only "${vendor_root}/etc/audio/sku_canoe/plugin_manager.xml" \
+bind_file_read_only "${vendor_root}/etc/audio/sku_alor/plugin_manager.xml" \
     "/vendor/etc/plugin_manager.xml"
+report "Macan Alor speaker mixer and resource-manager configurations exposed"
 
 # Oplus speaker processing is loaded into AudioPD on demand. These device-only
 # DSP modules live in ODM, while adsprpc searches the legacy vendor RFSA path.
