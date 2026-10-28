@@ -42,6 +42,7 @@ on boot
 #endif /* OPLUS_FEATURE_CHG_BASIC */
 service vendor.oplus.vibrator /odm/bin/hw/vendor.oplus.hardware.vibrator-service
     class late_start
+    disabled
     user root
     group root input
     setenv RICHTAP_DEVICE_PATH /dev/awinic_haptic
