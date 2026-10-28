@@ -313,9 +313,9 @@ struct PalApi {
   StreamOperation stream_stop = nullptr;
   StreamWrite stream_write = nullptr;
 
-  ~PalApi() {
-    if (library) dlclose(library);
-  }
+  // PAL creates vendor worker threads even when pal_init fails. Keep its
+  // code mapped for this disposable player's lifetime; main exits with
+  // _exit after stream cleanup instead of unloading code beneath callbacks.
 
   template <typename T>
   bool LoadSymbol(const char* name, T* target) {
@@ -537,8 +537,10 @@ int RunPlayer(const char* fifo) {
   PalStreamHandle* stream = nullptr;
   int result = 70;
 
-  if (api.init() != 0) {
-    fprintf(stderr, "AERA audio: stock PAL initialization failed\n");
+  const int init_result = api.init();
+  if (init_result != 0) {
+    fprintf(stderr, "AERA audio: stock PAL initialization failed (%d)\n",
+            init_result);
     goto done;
   }
   initialized = true;
@@ -611,8 +613,11 @@ done:
 }  // namespace
 
 int main(int argc, char** argv) {
-  if (argc == 3 && strcmp(argv[1], "--play-fifo") == 0 && getuid() == 0)
-    return RunPlayer(argv[2]);
+  if (argc == 3 && strcmp(argv[1], "--play-fifo") == 0 && getuid() == 0) {
+    const int result = RunPlayer(argv[2]);
+    fflush(stderr);
+    _exit(result);
+  }
   if (argc != 2 || strcmp(argv[1], "--browser-audio") != 0 || getuid() != 0) {
     fprintf(stderr, "Usage (root recovery only): aera-audio-bridge --browser-audio\n");
     return 64;
