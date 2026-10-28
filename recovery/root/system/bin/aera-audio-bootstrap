@@ -265,6 +265,39 @@ start_init_service() {
     return 0
 }
 
+dump_audio_state() {
+    # Include the missing probe/component in normal debug bundles, without
+    # needing a separate tester session to mount debugfs and collect it.
+    if ! grep -q ' /sys/kernel/debug debugfs ' /proc/mounts; then
+        mkdir -p /sys/kernel/debug
+        mount -t debugfs debugfs /sys/kernel/debug 2>/dev/null
+    fi
+    audio_state=/tmp/aera-audio-state.txt
+    {
+        echo "=== ALSA cards and nodes ==="
+        cat /proc/asound/cards
+        ls -l /dev/snd
+        echo "=== BT audio endpoint modules ==="
+        grep -E '^(btpower|btfmcodec|bt_fm_swr|lpass_bt_swr_dlkm|machine_dlkm) ' /proc/modules
+        echo "=== Deferred probes ==="
+        cat /sys/kernel/debug/devices_deferred
+        echo "=== ASoC components ==="
+        cat /sys/kernel/debug/asoc/components
+        echo "=== ASoC DAIs ==="
+        cat /sys/kernel/debug/asoc/dais
+        echo "=== Speaker driver bindings ==="
+        ls -l /sys/bus/i2c/devices/20-0034/driver /sys/bus/i2c/devices/20-0035/driver
+        echo "=== Remote processors ==="
+        for processor in /sys/class/remoteproc/remoteproc*; do
+            [ -r "${processor}/name" ] || continue
+            cat "${processor}/name" "${processor}/state"
+        done
+    } > "${audio_state}" 2>&1
+    while IFS= read -r audio_line; do
+        report "state: ${audio_line}"
+    done < "${audio_state}"
+}
+
 start_adsp() {
     adsp_remoteproc=""
     for candidate in /sys/class/remoteproc/remoteproc*; do
@@ -328,11 +361,14 @@ while [ ! -e /dev/snd/controlC0 ] && [ "${attempt}" -lt 200 ]; do
     attempt=$((attempt + 1))
     sleep 0.1
 done
-[ -e /dev/snd/controlC0 ] || fail "the Qualcomm machine sound card did not register"
+if [ ! -e /dev/snd/controlC0 ]; then
+    dump_audio_state
+    fail "the Qualcomm machine sound card did not register"
+fi
 report "sound card registered after ${attempt} polling intervals"
 
 # The init service owns the stock-library environment. Do not export it here:
 # recovery's toolbox/getprop/setprop require AERA's matching system libraries.
 start_init_service aera-agm-service required
 
-report "Macan AGM backend is ready (playback not yet tested)"
+report "Macan AGM backend process started; aera-audio-service reports Binder readiness"
