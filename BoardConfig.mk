@@ -133,6 +133,7 @@ AERA_INCLUDE_RESETPROP := true
 
 # Only ship root-provider modules for the device's Android kernel version.
 AERA_ROOT_MODULE_KERNELS := 6.12
+AERA_ENABLE_EFISP := 1
 
 # Debug
 TARGET_USES_LOGD := true
